@@ -1,0 +1,7 @@
+{
+  "name": "Gemini AirTyper",
+  "description": "A futuristic virtual keyboard that floats in the air. It uses your camera and Gemini 2.5 Flash to recognize your finger gestures and type without touching the screen.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
