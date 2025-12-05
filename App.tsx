@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Webcam from 'react-webcam';
-import { Keyboard, Trash2, Copy, Hand, Sparkles, Loader2 } from 'lucide-react';
+import { Keyboard, Trash2, Copy, Hand, Sparkles, Loader2, Clock, Type } from 'lucide-react';
 import { GlassKeyboard } from './components/GlassKeyboard';
 import { initializeHandDetection, detectHands, calculateDistance } from './services/handDetection';
 import { generateSmartCompletion } from './services/gemini';
@@ -23,6 +23,9 @@ export default function App() {
 
   // Gemini State
   const [isThinking, setIsThinking] = useState(false);
+  
+  // UI State
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
     const init = async () => {
@@ -30,7 +33,16 @@ export default function App() {
       setIsLoaded(true);
     };
     init();
-    return () => cancelAnimationFrame(requestRef.current);
+    
+    // Clock Timer
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => {
+      cancelAnimationFrame(requestRef.current);
+      clearInterval(timer);
+    };
   }, []);
 
   const processFrame = useCallback(() => {
@@ -204,28 +216,44 @@ export default function App() {
         <div className="flex justify-between items-start mb-4 border-b border-white/10 pb-4">
           <div className="flex items-center gap-2 text-neon">
             <Keyboard size={24} />
-            <span className="text-sm font-bold tracking-[0.2em] uppercase">Gemini AirTyper</span>
+            <span className="text-sm font-bold tracking-[0.2em] uppercase hidden sm:inline">Gemini AirTyper</span>
           </div>
-          <div className="flex gap-3">
-             <button onClick={handleCopy} className="p-2 hover:bg-white/10 rounded-lg transition-colors border border-white/5 text-white/70 hover:text-white" title="Copy">
-              <Copy size={18} />
-            </button>
-            <button onClick={handleClear} className="p-2 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors border border-white/5" title="Clear">
-              <Trash2 size={18} />
-            </button>
+          
+          <div className="flex items-center gap-6">
+            {/* Time and Stats */}
+            <div className="hidden sm:flex flex-col items-end text-xs font-mono text-white/50 gap-0.5">
+              <div className="flex items-center gap-1.5">
+                <Clock size={12} />
+                <span>{currentTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'})}</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-neon/80">
+                <Type size={12} />
+                <span>{typedText.length} chars</span>
+              </div>
+            </div>
+
+            <div className="flex gap-3 pl-4 border-l border-white/10">
+              <button onClick={handleCopy} className="p-2 hover:bg-white/10 rounded-lg transition-colors border border-white/5 text-white/70 hover:text-white" title="Copy">
+                <Copy size={18} />
+              </button>
+              <button onClick={handleClear} className="p-2 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors border border-white/5" title="Clear">
+                <Trash2 size={18} />
+              </button>
+            </div>
           </div>
         </div>
         
         {/* Main Text Display Area */}
+        {/* Added whitespace-pre-wrap to fix spacebar latency visualization */}
         <div className="min-h-[120px] flex flex-wrap content-start">
            {typedText.length === 0 ? (
              <span className="text-white/30 text-3xl font-light italic">Type something...</span>
            ) : (
-             <p className="text-3xl md:text-5xl font-mono font-medium tracking-wide break-all text-white drop-shadow-lg leading-relaxed">
+             <p className="text-3xl md:text-5xl font-mono font-medium tracking-wide break-all whitespace-pre-wrap text-white drop-shadow-lg leading-relaxed">
               {typedText}
              </p>
            )}
-           <span className="animate-pulse inline-block w-4 h-8 md:h-12 bg-neon ml-2 align-middle rounded-sm shadow-[0_0_10px_#00f3ff]"></span>
+           <span className="animate-pulse inline-block w-4 h-8 md:h-12 bg-neon ml-1 align-middle rounded-sm shadow-[0_0_10px_#00f3ff]"></span>
         </div>
 
         <div className="flex justify-between items-end mt-4 pt-4 border-t border-white/10">
